@@ -16,6 +16,27 @@
     @keyframes fadeIn { from {opacity:0; transform: translateY(10px);} to {opacity:1; transform: translateY(0);} }
     button { transition: all 0.3s ease; }
     button:hover { transform: translateY(-2px) scale(1.03); }
+
+    /* ===== MOBILE LAYOUT CHANGES ===== */
+    @media (max-width: 768px) {
+      #results {
+        display: flex;
+        overflow-x: auto;
+        gap: 1rem;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 1rem;
+      }
+      #results > div {
+        flex: 0 0 85%;
+        scroll-snap-align: center;
+      }
+      h1, h2, h3, button, input, textarea {
+        font-size: larger;
+      }
+      textarea, input, select, button {
+        padding: 1rem !important;
+      }
+    }
   </style>
 </head>
 <body class="text-gray-100 min-h-screen p-6">
@@ -36,7 +57,7 @@
     </div>
 
     <!-- Controls -->
-    <div class="flex items-center gap-4 mt-8 justify-center">
+    <div class="flex items-center gap-4 mt-8 justify-center flex-wrap">
       <input type="number" id="groupCount" class="w-24 p-3 rounded-md bg-slate-700 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="#Groups" min="2">
       <button id="setLeadersButton" onclick="setupLeaders()" class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl shadow-lg font-semibold">Set Leaders</button>
       <button id="splitGroupsButton" onclick="makeGroups()" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl shadow-lg font-semibold">Split Groups</button>
@@ -200,5 +221,4 @@ function makeGroups() {
 }
 </script>
 </body>
-
 </html>
