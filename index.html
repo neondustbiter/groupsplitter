@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title id="pageTitle">group maker for claudia officers</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -14,26 +15,21 @@
     .card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 20px 35px rgba(0,0,0,0.3); background: #1e293b; }
     .fade-in { animation: fadeIn 0.6s ease forwards; }
     @keyframes fadeIn { from {opacity:0; transform: translateY(10px);} to {opacity:1; transform: translateY(0);} }
-    button { transition: all 0.3s ease; }
+    button { transition: all 0.3s ease; cursor: pointer; }
     button:hover { transform: translateY(-2px) scale(1.03); }
 
     /* ===== MOBILE LAYOUT CHANGES ===== */
     @media (max-width: 768px) {
-      /* Make results vertical scroll instead of horizontal */
-      #results {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-      #results > div {
-        flex: 1 1 auto;
-        width: 100%;
-      }
-      /* Same for leaders if needed */
+      #results,
       #leadersSection {
-        display: flex;
-        flex-direction: column;
+        display: flex !important;
+        flex-direction: column !important;
         gap: 1.5rem;
+      }
+      #results > div,
+      #leadersSection > div {
+        flex: 1 1 auto;
+        width: 100% !important;
       }
       h1, h2, h3, button, input, textarea {
         font-size: larger;
@@ -76,7 +72,154 @@
   </div>
 
 <script>
-/* same JS as yours */
+// ===== EASY TO EDIT TEXT LABELS =====
+const LABELS = {
+  pageTitle: "group maker for claudia officers",
+  mainHeading: "group maker for claudia officers",
+  participantsTitle: "All Participants",
+  separationsTitle: "Separations",
+  participantsPlaceholder: "Enter names, one per line",
+  separationsPlaceholder: "Enter people to keep apart, comma separated per line (e.g. Eyce, Annabelle)",
+  setLeadersButton: "Set Leaders",
+  splitGroupsButton: "Split Groups",
+  groupLabel: (i) => `Group ${i+1}`,
+  groupLeadersTitle: (i) => `Group ${i+1} Leaders`,
+  leaderLabel: "Leader:",
+  assistantLabel: "Assistant:",
+};
+
+// Apply labels dynamically
+window.onload = () => {
+  document.title = LABELS.pageTitle;
+  document.getElementById("mainHeading").innerText = LABELS.mainHeading;
+  document.getElementById("participantsTitle").innerText = LABELS.participantsTitle;
+  document.getElementById("separationsTitle").innerText = LABELS.separationsTitle;
+  document.getElementById("names").placeholder = LABELS.participantsPlaceholder;
+  document.getElementById("separations").placeholder = LABELS.separationsPlaceholder;
+  document.getElementById("setLeadersButton").innerText = LABELS.setLeadersButton;
+  document.getElementById("splitGroupsButton").innerText = LABELS.splitGroupsButton;
+};
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function balanceGroups(groups) {
+  let changed = true;
+  while (changed) {
+    changed = false;
+    let sizes = groups.map(g => g.length);
+    let maxIdx = sizes.indexOf(Math.max(...sizes));
+    let minIdx = sizes.indexOf(Math.min(...sizes));
+    if (sizes[maxIdx] - sizes[minIdx] > 1) {
+      let candidate = groups[maxIdx].pop();
+      groups[minIdx].push(candidate);
+      changed = true;
+    }
+  }
+  return groups;
+}
+
+function setupLeaders() {
+  const groupCount = parseInt(document.getElementById('groupCount').value);
+  const names = document.getElementById('names').value.split('\n').map(n => n.trim()).filter(n => n);
+
+  if (!groupCount || groupCount < 2 || names.length === 0) {
+    alert("Please enter names and number of groups first.");
+    return;
+  }
+
+  let leadersSection = document.getElementById('leadersSection');
+  leadersSection.innerHTML = "";
+
+  for (let i = 0; i < groupCount; i++) {
+    let div = document.createElement('div');
+    div.className = "card bg-slate-800 p-5 rounded-2xl fade-in";
+    div.innerHTML = `
+      <h3 class='text-lg font-bold mb-3 text-indigo-400'>${LABELS.groupLeadersTitle(i)}</h3>
+      <label class='block mb-2'>${LABELS.leaderLabel}
+        <select id='leader-${i}' class='w-full p-2 rounded-md bg-slate-700 mt-1'>
+          <option value="">None</option>
+          ${names.map(n => `<option value="${n}">${n}</option>`).join('')}
+        </select>
+      </label>
+      <label class='block'>${LABELS.assistantLabel}
+        <select id='assistant-${i}' class='w-full p-2 rounded-md bg-slate-700 mt-1'>
+          <option value="">None</option>
+          ${names.map(n => `<option value="${n}">${n}</option>`).join('')}
+        </select>
+      </label>
+    `;
+    leadersSection.appendChild(div);
+  }
+}
+
+function makeGroups() {
+  const names = document.getElementById('names').value.split('\n').map(n => n.trim()).filter(n => n);
+  const separationsInput = document.getElementById('separations').value.split('\n').map(s => s.trim()).filter(s => s);
+  const groupCount = parseInt(document.getElementById('groupCount').value);
+
+  if (!groupCount || groupCount < 2) {
+    alert("Enter at least 2 groups.");
+    return;
+  }
+
+  let groups = Array.from({length: groupCount}, () => []);
+  let used = new Set();
+
+  // Apply leaders and assistants
+  for (let i = 0; i < groupCount; i++) {
+    let leader = document.getElementById(`leader-${i}`)?.value;
+    let assistant = document.getElementById(`assistant-${i}`)?.value;
+    if (leader) { groups[i].push(`👑 <b>${leader}</b>`); used.add(leader); }
+    if (assistant && assistant !== leader) { groups[i].push(`🤝 <b>${assistant}</b>`); used.add(assistant); }
+  }
+
+  // Shuffle and distribute the rest
+  let pool = shuffle(names.filter(n => !used.has(n)));
+  let roundRobin = 0;
+  pool.forEach(p => {
+    groups[roundRobin % groupCount].push(p);
+    roundRobin++;
+  });
+
+  // Handle separations
+  separationsInput.forEach(line => {
+    let set = line.split(',').map(x => x.trim());
+    set.forEach((person, idx) => {
+      let gi = groups.findIndex(g => g.some(n => n.replace(/(<([^>]+)>)/gi, "") === person));
+      if (gi === -1) return;
+      for (let j = 0; j < idx; j++) {
+        let other = set[j];
+        let gj = groups.findIndex(g => g.some(n => n.replace(/(<([^>]+)>)/gi, "") === other));
+        if (gi === gj) {
+          groups[gi] = groups[gi].filter(n => n.replace(/(<([^>]+)>)/gi, "") !== person);
+          let sizes = groups.map(g => g.length);
+          let target = sizes.indexOf(Math.min(...sizes));
+          groups[target].push(person);
+          gi = target;
+        }
+      }
+    });
+  });
+
+  // Balance groups
+  groups = balanceGroups(groups);
+
+  // Render
+  let out = document.getElementById('results');
+  out.innerHTML = "";
+  groups.forEach((g,i) => {
+    let div = document.createElement('div');
+    div.className = "card bg-slate-900 p-5 rounded-2xl fade-in";
+    div.innerHTML = `<h3 class='text-xl font-bold mb-3 text-indigo-400'>${LABELS.groupLabel(i)}</h3><ul class='list-disc pl-5 space-y-1'>${g.map(n => `<li>${n}</li>`).join('')}</ul>`;
+    out.appendChild(div);
+  });
+}
 </script>
 </body>
 </html>
