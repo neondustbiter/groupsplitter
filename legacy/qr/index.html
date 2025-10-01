@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>The Claudian QR</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/qr-code-styling/lib/qr-code-styling.js"></script>
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --accent: #8b5cf6;
+      --card-bg: rgba(15,23,42,0.6);
+      --border: #334155;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg,#0b1220,#071023);
+      color: #e6eef8;
+      padding: 18px;
+    }
+
+    /* keep QR rounded */
+    #canvas canvas { border-radius: 1rem; display:block; }
+
+    /* shape buttons */
+    .shape-option {
+      transition: transform .18s cubic-bezier(.2,.9,.2,1), box-shadow .18s;
+      user-select: none;
+    }
+    .shape-option:hover {
+      transform: scale(1.12);
+      box-shadow: 0 6px 18px rgba(139,92,246,0.16);
+    }
+    .shape-option.active {
+      border: 2px solid var(--accent);
+      background: rgba(30,27,75,.12);
+    }
+
+    /* color swatch wrapper */
+    .color-wrapper {
+      display:inline-block;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 9999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      position: relative;
+      cursor: pointer;
+      transition: transform .18s, box-shadow .18s;
+    }
+    .color-wrapper:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 20px rgba(139,92,246,0.18);
+    }
+    .color-wrapper input[type="color"] {
+      position: absolute;
+      inset: 0;
+      width:100%;
+      height:100%;
+      opacity:0;
+      cursor:pointer;
+    }
+
+    /* range slider styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 0.5rem;
+      background: #334155;
+      border-radius: 0.25rem;
+      outline: none;
+      cursor: pointer;
+      transition: box-shadow .2s;
+    }
+    input[type=range]:hover { box-shadow: 0 0 8px rgba(139,92,246,0.12); }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #fff;
+      transition: transform .15s, box-shadow .18s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); box-shadow: 0 6px 18px rgba(139,92,246,0.22); }
+    input[type=range]::-moz-range-thumb {
+      width: 1rem; height: 1rem; border-radius: 50%;
+      background: var(--accent); border: 2px solid #fff;
+    }
+
+    /* buttons hover */
+    button#download {
+      transition: transform .18s, box-shadow .18s;
+    }
+    button#download:hover {
+      transform: scale(1.06);
+      box-shadow: 0 10px 30px rgba(199,70,255,0.16);
+    }
+
+    /* QR hover (normal subtle hover like cards) */
+    #canvas {
+      transition: transform .2s, box-shadow .2s;
+    }
+    #canvas:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 22px rgba(139,92,246,0.15);
+    }
+
+    /* small responsive tweak */
+    @media (max-width:900px){
+      .grid-cols-6 { grid-template-columns: repeat(6, minmax(0,1fr)); }
+      .bg-slate-800\/60:hover,
+      input[type="text"]:hover,
+      input[type="range"]:hover,
+      .color-wrapper:hover {
+        background-color: rgba(255,255,255,0.05);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="max-w-5xl mx-auto">
+	<h1 class="text-4xl font-extrabold text-center mb-8 bg-gradient-to-r from-cyan-400 to-violet-500 bg-clip-text text-transparent">
+		The Claudian QR
+	</h1>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Preview -->
+      <div class="bg-slate-800/60 backdrop-blur-md rounded-2xl p-6 border border-slate-700 shadow-xl flex justify-center items-center">
+        <div id="canvas" class="rounded-xl overflow-hidden flex justify-center items-center"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="space-y-5">
+        <div class="bg-slate-800/60 backdrop-blur-md rounded-2xl p-6 border border-slate-700 shadow-xl space-y-4">
+          <!-- QR Content -->
+          <div>
+            <label class="block text-sm font-medium mb-1">QR Content</label>
+            <input id="data" value="https://example.com"
+              class="w-full px-3 py-2 rounded-lg bg-slate-900/70 border border-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none text-slate-100" />
+          </div>
+
+          <!-- Size -->
+          <div>
+            <label class="block text-sm font-medium mb-1">Size</label>
+            <input id="size" type="range" min="200" max="600" value="350" />
+          </div>
+
+          <!-- Gradient -->
+          <div>
+            <label class="block text-sm font-medium mb-1">Gradient Colors</label>
+            <div class="flex items-center gap-4">
+              <label class="color-wrapper" id="gradSwatch1"><input type="color" id="gradColor1" value="#000000"></label>
+              <label class="color-wrapper" id="gradSwatch2"><input type="color" id="gradColor2" value="#4f46e5"></label>
+              <div class="flex items-center gap-2 ml-2">
+                <label class="text-sm">Angle</label>
+                <input id="gradAngle" type="range" min="0" max="360" value="0" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Background -->
+          <div>
+            <label class="block text-sm font-medium mb-1">Background</label>
+            <label class="color-wrapper" id="bgSwatch"><input type="color" id="bgColor" value="#ffffff"></label>
+          </div>
+
+          <!-- Shapes -->
+          <div>
+            <label class="block text-sm font-medium mb-2">Body Shape</label>
+            <div id="bodyShapes" class="grid grid-cols-6 gap-2 text-center">
+              <button data-shape="square" class="shape-option px-2 py-1 rounded bg-slate-700">■</button>
+              <button data-shape="dots" class="shape-option px-2 py-1 rounded bg-slate-700">••</button>
+              <button data-shape="rounded" class="shape-option px-2 py-1 rounded bg-slate-700">⬚</button>
+              <button data-shape="classy" class="shape-option px-2 py-1 rounded bg-slate-700">◇</button>
+              <button data-shape="classy-rounded" class="shape-option px-2 py-1 rounded bg-slate-700">◈</button>
+              <button data-shape="extra-rounded" class="shape-option px-2 py-1 rounded bg-slate-700">⬭</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Eye Frame</label>
+            <div id="eyeFrames" class="grid grid-cols-3 gap-2">
+              <button data-shape="square" class="shape-option px-2 py-1 rounded bg-slate-700">▢</button>
+              <button data-shape="dot" class="shape-option px-2 py-1 rounded bg-slate-700">◯</button>
+              <button data-shape="extra-rounded" class="shape-option px-2 py-1 rounded bg-slate-700">⬭</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-2">Eye Ball</label>
+            <div id="eyeBalls" class="grid grid-cols-3 gap-2">
+              <button data-shape="square" class="shape-option px-2 py-1 rounded bg-slate-700">■</button>
+              <button data-shape="dot" class="shape-option px-2 py-1 rounded bg-slate-700">●</button>
+              <button data-shape="extra-rounded" class="shape-option px-2 py-1 rounded bg-slate-700">⬤</button>
+            </div>
+          </div>
+
+          <!-- Download -->
+          <button id="download" class="w-full mt-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md">
+            Download QR
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const qrCode = new QRCodeStyling({
+      width: 350,
+      height: 350,
+      type: "svg",
+      data: document.getElementById('data').value,
+      dotsOptions: { type: "square", color: "#000000" },
+      backgroundOptions: { color: "#ffffff" },
+      cornersSquareOptions: { type: "square" },
+      cornersDotOptions: { type: "square" }
+    });
+    qrCode.append(document.getElementById("canvas"));
+
+    let currentBodyShape = "square";
+    let currentEyeFrame = "square";
+    let currentEyeBall = "square";
+
+    function setupColorPreview(inputId, wrapperId) {
+      const input = document.getElementById(inputId);
+      const wrapper = document.getElementById(wrapperId);
+      wrapper.style.backgroundColor = input.value;
+      input.addEventListener('input', () => {
+        wrapper.style.backgroundColor = input.value;
+        updateQR();
+      });
+    }
+    setupColorPreview('gradColor1','gradSwatch1');
+    setupColorPreview('gradColor2','gradSwatch2');
+    setupColorPreview('bgColor','bgSwatch');
+
+    function setupShapeGrid(gridId, defaultShape, setter) {
+      const buttons = document.querySelectorAll(`#${gridId} .shape-option`);
+      buttons.forEach(btn => {
+        if (btn.dataset.shape === defaultShape) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+          buttons.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          setter(btn.dataset.shape);
+          updateQR();
+        });
+      });
+    }
+
+    setupShapeGrid('bodyShapes', 'square', s => currentBodyShape = s);
+    setupShapeGrid('eyeFrames', 'square', s => currentEyeFrame = s);
+    setupShapeGrid('eyeBalls', 'square', s => currentEyeBall = s);
+
+    ['data','size','gradAngle'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', updateQR);
+    });
+
+    function updateQR() {
+      const data = document.getElementById('data').value;
+      const size = parseInt(document.getElementById('size').value,10);
+      const grad1 = document.getElementById('gradColor1').value;
+      const grad2 = document.getElementById('gradColor2').value;
+      const angleDeg = parseInt(document.getElementById('gradAngle').value,10);
+      const bg = document.getElementById('bgColor').value;
+
+      qrCode.update({
+        data,
+        width: size,
+        height: size,
+        dotsOptions: {
+          type: currentBodyShape,
+          gradient: {
+            type: "linear",
+            rotation: angleDeg * Math.PI / 180,
+            colorStops: [
+              { offset: 0, color: grad1 },
+              { offset: 1, color: grad2 }
+            ]
+          }
+        },
+        backgroundOptions: { color: bg },
+        cornersSquareOptions: { type: currentEyeFrame },
+        cornersDotOptions: { type: currentEyeBall }
+      });
+    }
+
+    document.getElementById('download').addEventListener('click', ()=> {
+      qrCode.download({ name: "claudian-qr", extension: "png" });
+    });
+
+    updateQR();
+  </script>
+</body>
+</html>
