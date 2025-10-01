@@ -205,6 +205,18 @@
               <button data-shape="extra-rounded" class="shape-option px-2 py-1 rounded bg-slate-700">⬤</button>
             </div>
           </div>
+		
+		<!-- Upload Logo -->
+		<div>
+			<label class="block text-sm font-medium mb-2">Upload Logo</label>
+			<input type="file" id="logoUpload" accept="image/*" 
+				class="block w-full text-sm text-slate-300
+				file:mr-4 file:py-2 file:px-4
+				file:rounded-lg file:border-0
+				file:text-sm file:font-semibold
+				file:bg-fuchsia-600 file:text-white
+				hover:file:bg-fuchsia-700 cursor-pointer" />
+		<div>	
 
           <!-- Download -->
           <button id="download" class="w-full mt-2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md">
@@ -265,7 +277,22 @@
     ['data','size','gradAngle'].forEach(id=>{
       document.getElementById(id).addEventListener('input', updateQR);
     });
+	
+	// handle logo upload
+	document.getElementById('logoUpload').addEventListener('change', e => {
+		const file = e.target.files[0];
+		if (!file) return;
 
+	const reader = new FileReader();
+	reader.onload = () => {
+		qrCode.update({
+			image: reader.result
+		});
+	};
+	reader.readAsDataURL(file);
+});
+
+	
     function updateQR() {
       const data = document.getElementById('data').value;
       const size = parseInt(document.getElementById('size').value,10);
