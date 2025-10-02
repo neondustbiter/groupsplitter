@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8" />
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <title>group maker for claudia officers</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+
+    :root{--bg1:#0f172a;--card:#0f172a;--glass: rgba(15,23,42,0.6);} 
+
+    html,body{height:100%}
+
+    body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0b1220,#071023);color:#e6eef8;padding:18px}
+
+    .tab{cursor:pointer;padding:8px 14px;border-radius:10px;transition:all .2s}
+
+    .tab:hover{transform:scale(1.05);}
+
+    .tab.active{background:linear-gradient(90deg,#312e81,#4338ca);box-shadow:0 8px 30px rgba(67,56,202,0.2);}
+
+    .tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+    .underline{height:3px;background:linear-gradient(90deg,#60a5fa,#a78bfa);border-radius:3px;transition:all .28s}
+
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(6px);padding:16px;border-radius:14px;transition:all .2s;}
+
+    .card:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(0,0,0,0.3);}
+
+   
+
+.shuffle-btn {
+
+	display: block;
+
+	margin: 2rem auto;
+
+	font-size: 1.5rem;
+
+	font-weight: 700;
+
+	color: #111827;
+
+	background: linear-gradient(90deg,#facc15,#f59e0b);
+
+	padding: 1rem 2rem;
+
+	border-radius: 14px;
+
+	box-shadow: 0 8px 30px rgba(250,204,21,0.4);
+
+	transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+
+	cursor: pointer;
+
+}
+
+
+
+.shuffle-btn:hover {
+
+  transform: scale(1.1) rotate(-2deg);
+
+  box-shadow: 0 14px 40px rgba(250,204,21,0.6);
+
+  background: linear-gradient(90deg,#fcd34d,#f59e0b);
+
+}
+
+	
+
+    /* suggestions */
+
+    .glow-box{box-shadow:0 6px 30px rgba(124,58,237,0.16);border:1px solid rgba(124,58,237,0.22)}
+
+    .fade-cycle{transition:opacity 900ms cubic-bezier(.2,.9,.2,1),transform 900ms}
+
+
+
+    /* small helpers */
+
+    .leader-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:linear-gradient(90deg,#111827,#0b1220);border:1px solid rgba(99,102,241,.12)}
+
+    .sparkle{position:relative}
+
+    .sparkle::after{content:'';position:absolute;inset:0;border-radius:10px;box-shadow:0 0 18px rgba(255,255,255,0.05);opacity:0;transition:opacity .4s}
+
+    .sparkle.on::after{opacity:1}
+
+
+
+    /* mobile layout */
+
+    @media (max-width:900px){
+
+      .layout{flex-direction:column}
+
+      #suggestionsPanel{order:99;width:100%}
+
+      .top-right-buttons{flex-wrap:wrap;gap:4px;}
+
+    }
+
+
+
+    /* animated shuffle flash */
+
+    .flash{animation:flashIt .65s cubic-bezier(.17,.67,.83,.67)}
+
+    @keyframes flashIt{0%{transform:scale(.98);opacity:.3}50%{transform:scale(1.04);opacity:1}100%{transform:scale(1);opacity:1}}
+
+
+
+    /* editable inline */
+
+    .editable{cursor:text;border-bottom:1px dashed rgba(255,255,255,0.06)}
+
+
+
+    /* Suggestions panel size */
+
+    #suggestionsPanel {
+
+      width: 320px;
+
+      flex-shrink: 0;
+
+      height: auto;
+
+      max-height: 500px;
+
+      overflow-y: auto;
+
+      padding: 16px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      justify-content: space-between;
+
+    }
+
+
+
+    /* BIG shuffle button independent */
+
+    #shuffleAllBtn {
+
+      display:block;
+
+      margin:1.5rem auto;
+
+      font-size:1.25rem;
+
+      padding:1rem 2rem;
+
+      background:#facc15;
+
+      color:#000;
+
+      font-weight:700;
+
+      border-radius:12px;
+
+      box-shadow:0 5px 15px rgba(250,204,21,0.5);
+
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    }
+
+    #shuffleAllBtn:hover{
+
+      transform:scale(1.1);
+
+      box-shadow:0 12px 30px rgba(250,204,21,0.7);
+
+    }
+
+
+
+    /* Button hover animation for all buttons */
+
+    button{transition: all 0.25s ease;}
+
+    button:hover{transform:scale(1.05);}
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="max-w-7xl mx-auto">
+
+    <div class="tabs mb-4 items-center">
+
+      <div id="tabsContainer" class="tabs"></div>
+
+      <button id="newTabBtn" class="ml-4 tab bg-indigo-600 hover:bg-indigo-500">+ New Tab</button>
+
+      <div style="flex:1"></div>
+
+      <div class="text-sm text-slate-300">group maker for claudia officers</div>
+
+    </div>
+
+
+
+    <div class="layout flex gap-6">
+
+      <!-- app area -->
+
+      <div class="flex-1">
+
+        <div class="card">
+
+          <div class="flex items-center gap-4 top-right-buttons flex-wrap">
+
+            <h1 id="appTitle" class="text-2xl font-bold">Group Maker</h1>
+
+            <input id="instanceName" class="ml-2 px-3 py-1 rounded-md bg-slate-800 text-sm" placeholder="rename instance" />
+
+            <div style="flex:1"></div>
+
+            <button id="cycleLeadersBtn" class="bg-fuchsia-600 px-3 py-1 rounded-md">Cycle Leaders</button>
+
+            <button id="exportBtn" class="bg-slate-700 px-3 py-1 rounded-md">Export JSON</button>
+
+          </div>
+
+
+
+          <div class="mt-4 grid md:grid-cols-2 gap-4">
+
+            <div class="card">
+
+              <h3 class="font-semibold">Participants</h3>
+
+              <textarea id="names" rows="10" class="w-full mt-2 p-3 rounded-md bg-slate-800" placeholder="Enter names, one per line"></textarea>
+
+              <div class="flex gap-2 mt-3">
+
+                <button id="applyNamesBtn" class="bg-indigo-600 px-3 py-2 rounded-md">Apply Names</button>
+
+                <button id="clearNamesBtn" class="bg-red-600 px-3 py-2 rounded-md">Clear</button>
+
+              </div>
+
+            </div>
+
+
+
+            <div class="card">
+
+              <h3 class="font-semibold">Separations (one set per line, comma separated)</h3>
+
+              <textarea id="separations" rows="10" class="w-full mt-2 p-3 rounded-md bg-slate-800" placeholder="e.g. ERICH CHLOE DIANE, EYCE WIN, LADY MARGARETTE AN"></textarea>
+
+              <div class="flex gap-2 mt-3">
+
+                <button id="applySepBtn" class="bg-indigo-600 px-3 py-2 rounded-md">Apply Separations</button>
+
+                <button id="clearSepBtn" class="bg-red-600 px-3 py-2 rounded-md">Clear</button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+
+          <div class="mt-4 flex items-center gap-3">
+
+            <label class="text-sm"># Groups</label>
+
+            <input id="groupCount" type="number" min="2" value="4" class="w-20 p-2 rounded-md bg-slate-800 text-center" />
+
+            <button id="createGroupsBtn" class="bg-green-600 px-4 py-2 rounded-md">Create / Split</button>
+
+            <button id="setLeadersBtn" class="bg-indigo-600 px-4 py-2 rounded-md">Set Leaders (manual)</button>
+
+            <div style="flex:1"></div>
+
+            <button id="renameGroupsBtn" class="bg-slate-700 px-3 py-2 rounded-md">Rename Groups</button>
+
+          </div>
+
+        </div>
+
+
+
+        <!-- BIG shuffle button independent -->
+
+        <button id="shuffleAllBtn" class="shuffle-btn">Shuffle Groups</button>
+
+
+
+        <!-- Groups container -->
+
+        <div id="groupsArea" class="mt-6 grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+
+
+        <!-- Leaders panel -->
+
+        <div id="leadersPanel" class="mt-6 card hidden">
+
+          <h3 class="font-semibold mb-2">Set Leaders</h3>
+
+          <div id="leadersContainer" class="flex flex-col gap-3"></div>
+
+          <button id="applyLeadersBtn" class="mt-3 bg-indigo-600 px-4 py-2 rounded-md">Apply Leaders</button>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- Suggestions panel -->
+
+      <div id="suggestionsPanel" class="w-80 card glow-box flex flex-col justify-between">
+
+        <div id="suggestionContent" class="fade-cycle"></div>
+
+        <div class="mt-4">
+
+          <button id="automateBtn" class="w-full bg-purple-600 px-4 py-2 rounded-md">Automate</button>
+
+          <button id="applyToAllBtn" class="w-full mt-2 bg-slate-700 px-4 py-2 rounded-md">Apply to all tabs</button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+<script>
+
+/* ===== Fix Tab Highlight ===== */
+
+function renderTabs(){
+
+  const c = document.getElementById('tabsContainer');
+
+  c.innerHTML = '';
+
+  App.tabs.forEach((t,i)=>{
+
+    const btn = document.createElement('div');
+
+    btn.className = 'tab' + (i === App.active ? ' active' : '');
+
+    btn.innerText = t.name;
+
+    btn.onclick = ()=>{
+
+      App.active = i;
+
+      loadActiveTab();
+
+      renderTabs(); // re-render ensures active class moves correctly
+
+    };
+
+    c.appendChild(btn);
+
+  });
+
+}
+
+const App = {
+
+  tabs: [],
+
+  active: 0,
+
+  suggestions: [
+
+    {title:'Recommended Participants',content:`KIER MATHEO, ANTONIO DOMINIC, JASON ANTON, EMMANUEL GERALDE, MAC ETHAN, LAMAR ANDREI, ROME, ERAGON, STEVEN CONRAD, JUNO FERNANDO, ZACHARY MALACHI, MARI GABREL, EYCE WIN, JOAQUIN, JIRO, JACOB MYRON, DOMINIC JOSHUA, SAIGE EZEKIEL, MISCHA YSABEL, FRANCE ELLIE, WYNESHA ISABEL, KENDRA AMBER GAILE, LADY MARGARETTE AN, XYLENE NICOLE, JULIA ANDREA, ERICH CHLOE DIANE, ATASHA GWYNETH, JHASSY NOREENE, MARGUERITE ANNE, MIKHAELA ANGELA, JOHAN PAM, JULIANA EDRIANNE, REANNA DYLAN, ASHLEY CHARMAINE, ATHENA EUNICE, RHEINE DENISE, MA. ANGELICA, ALHANA LISA, ALODIA CHRISTINA, SYEZKA`},
+
+    {title:'Recommended Separations',content:`ERICH CHLOE DIANE, EYCE WIN, LADY MARGARETTE AN, ANTONIO DOMINIC`},
+
+    {title:'Recommended Leaders/Assistants',content:`JACOB MYRON, ALHANA LISA, STEVEN CONRAD, RHEINE DENISE, JHASSY NOREENE, ASHLEY CHARMAINE, JOHAN PAM, ATHENA EUNICE`}
+
+  ],
+
+  suggestionIndex:0
+
+};
+
+
+
+function makeNewTab(name){
+
+  const tab = {
+
+    id: Date.now()+Math.random(),
+
+    name: name || `Instance ${App.tabs.length+1}`,
+
+    participants: [],
+
+    separations: [],
+
+    groupCount:4,
+
+    groups:[],
+
+    leaders:[],
+
+    groupNames:[]
+
+  };
+
+  App.tabs.push(tab);
+
+  App.active = App.tabs.length-1; // ✅ set only once here
+
+  renderTabs();
+
+  loadActiveTab();
+
+}
+
+
+
+function renderTabs(){
+
+  const c = document.getElementById('tabsContainer'); 
+
+  c.innerHTML='';
+
+
+
+  App.tabs.forEach((t,i)=>{
+
+    const btn = document.createElement('div');
+
+    btn.className = 'tab';
+
+    btn.innerText = t.name;
+
+
+
+    btn.onclick = ()=>{
+
+      // remove 'active' from all tabs first
+
+      c.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+
+
+
+      // set clicked tab as active
+
+      btn.classList.add('active');
+
+
+
+      // update App.active and load content
+
+      App.active = i;
+
+      loadActiveTab();
+
+    };
+
+
+
+    // if this tab is currently active, highlight it
+
+    if(i===App.active) btn.classList.add('active');
+
+
+
+    c.appendChild(btn);
+
+  });
+
+}
+
+
+
+
+
+/* ========== Persistence helpers ========== */
+
+function getActive(){ return App.tabs[App.active]; }
+
+
+
+/* ========== UI sync functions ========== */
+
+function loadActiveTab(){
+
+  const t = getActive();
+
+  document.getElementById('instanceName').value = t.name;
+
+  document.getElementById('names').value = t.participants.join('\n');
+
+  document.getElementById('separations').value = t.separations.map(s=>s.join(', ')).join('\n');
+
+  document.getElementById('groupCount').value = t.groupCount;
+
+  renderGroups();
+
+  document.getElementById('leadersPanel').classList.add('hidden');
+
+}
+
+
+
+function applyNames(){
+
+  const t = getActive();
+
+  t.participants = document.getElementById('names').value.split('\n').map(s=>s.trim()).filter(Boolean);
+
+  t.participants = Array.from(new Set(t.participants));
+
+  if (t.leaders.length < t.groupCount) { t.leaders = Array.from({length:t.groupCount},()=>({leader:'',assistant:''})); }
+
+  renderGroups();
+
+}
+
+
+
+function applySeparations(){
+
+  const t = getActive();
+
+  t.separations = document.getElementById('separations').value.split('\n').map(l=>l.split(',').map(x=>x.trim()).filter(Boolean)).filter(Boolean);
+
+}
+
+
+
+/* ========== Grouping logic ========== */
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }
+
+
+
+function createGroups(animated=false){
+
+  const t = getActive();
+
+  t.groupCount = Math.max(2,parseInt(document.getElementById('groupCount').value||t.groupCount));
+
+  t.groups = Array.from({length:t.groupCount},()=>[]);
+
+  if(!t.leaders || t.leaders.length!==t.groupCount) t.leaders = Array.from({length:t.groupCount},()=>({leader:'',assistant:''}));
+
+  if(!t.groupNames || t.groupNames.length!==t.groupCount) t.groupNames = Array.from({length:t.groupCount},(v,i)=>`Group ${i+1}`);
+
+
+
+  const used = new Set();
+
+  for(let i=0;i<t.groupCount;i++){
+
+    const L = t.leaders[i];
+
+    if(L && L.leader){ t.groups[i].push({name:L.leader,role:'leader'}); used.add(L.leader); }
+
+    if(L && L.assistant && L.assistant!==L.leader){ t.groups[i].push({name:L.assistant,role:'assistant'}); used.add(L.assistant); }
+
+  }
+
+  let pool = t.participants.filter(p=>!used.has(p)); shuffle(pool);
+
+  for(let i=0;i<pool.length;i++){ t.groups[i%t.groupCount].push({name:pool[i],role:'member'}); }
+
+
+
+  t.separations.forEach(set=>{
+
+    set.forEach(person=>{
+
+      let loc = findPersonGroupIndex(t,person);
+
+      if(loc===-1) return;
+
+      const others = set.filter(s=>s!==person);
+
+      others.forEach(o=>{
+
+        let loc2 = findPersonGroupIndex(t,o);
+
+        if(loc2===loc && loc2!==-1){
+
+          removePersonFromGroup(t,person);
+
+          const sizes = t.groups.map(g=>g.length);
+
+          let target = sizes.indexOf(Math.min(...sizes));
+
+          t.groups[target].push({name:person,role:'member'});
+
+        }
+
+      });
+
+    });
+
+  });
+
+
+
+  balanceGroups(t);
+
+  if(animated) animateShuffleResult(t);
+
+  renderGroups();
+
+}
+
+
+
+function findPersonGroupIndex(t,person){
+
+  for(let i=0;i<t.groups.length;i++){
+
+    if(t.groups[i].some(x=>x.name===person)) return i;
+
+  }
+
+  return -1;
+
+}
+
+function removePersonFromGroup(t,person){
+
+  for(let i=0;i<t.groups.length;i++){
+
+    t.groups[i]=t.groups[i].filter(x=>x.name!==person);
+
+  }
+
+}
+
+
+
+function balanceGroups(t){
+
+  let changed=true;
+
+  while(changed){
+
+    changed=false;
+
+    const sizes = t.groups.map(g=>g.length);
+
+    const maxIdx = sizes.indexOf(Math.max(...sizes));
+
+    const minIdx = sizes.indexOf(Math.min(...sizes));
+
+    if(sizes[maxIdx]-sizes[minIdx]>1){
+
+      const candidateIdx = t.groups[maxIdx].findIndex(x=>x.role==='member');
+
+      if(candidateIdx>-1){
+
+        const [candidate] = t.groups[maxIdx].splice(candidateIdx,1);
+
+        t.groups[minIdx].push(candidate);
+
+        changed=true;
+
+      } else break;
+
+    }
+
+  }
+
+}
+
+
+
+/* ========== Rendering groups UI ========== */
+
+function renderGroups(){
+
+  const t = getActive();
+
+  const container = document.getElementById('groupsArea'); container.innerHTML='';
+
+  for(let i=0;i<t.groupCount;i++){
+
+    const card = document.createElement('div'); card.className='card';
+
+    const header = document.createElement('div'); header.className='flex items-center justify-between';
+
+    const title = document.createElement('div'); title.innerHTML = `<strong class='editable' data-gi='${i}'>${t.groupNames[i]||`Group ${i+1}`}</strong>`;
+
+    title.querySelector('strong').ondblclick = e=>{
+
+      const el = e.target; const gid = el.dataset.gi;
+
+      const input = document.createElement('input'); input.value = el.innerText; input.className='px-2 py-1 rounded-md bg-slate-700';
+
+      el.replaceWith(input); input.focus();
+
+      input.onblur = ()=>{ t.groupNames[gid]=input.value||`Group ${parseInt(gid)+1}`; renderGroups(); };
+
+    };
+
+    header.appendChild(title);
+
+
+
+    const leaderBtn = document.createElement('button'); leaderBtn.className='bg-indigo-600 px-2 py-1 rounded-md text-sm'; leaderBtn.innerText='Leader';
+
+    leaderBtn.onclick = ()=>{ openLeaderModal(i); };
+
+    header.appendChild(leaderBtn);
+
+    card.appendChild(header);
+
+
+
+    const leaderArea = document.createElement('div'); leaderArea.className='mt-3';
+
+    const leaders = t.groups[i].filter(x=>x.role!=='member');
+
+    leaders.forEach(ld=>{
+
+      const span = document.createElement('div'); span.className='leader-badge mb-2 sparkle'; span.innerHTML = `${ld.role==='leader'?'👑':'🤝'} <strong>${ld.name}</strong>`;
+
+      span.ondblclick = ()=>{ inlineEditName(ld.name); };
+
+      leaderArea.appendChild(span);
+
+    });
+
+    card.appendChild(leaderArea);
+
+
+
+    const ul = document.createElement('ul'); ul.className='mt-3 list-disc pl-5 space-y-1';
+
+    t.groups[i].filter(x=>x.role==='member').forEach(mem=>{
+
+      const li = document.createElement('li'); li.innerHTML = `<span class='editable'>${mem.name}</span>`;
+
+      li.querySelector('.editable').ondblclick = ()=>{ inlineEditName(mem.name); };
+
+      ul.appendChild(li);
+
+    });
+
+    card.appendChild(ul);
+
+
+
+    container.appendChild(card);
+
+  }
+
+}
+
+
+
+/* ========== Inline name editing (global sync) ========== */
+
+function inlineEditName(name){
+
+  const newName = prompt('Edit name',name);
+
+  if(!newName || !newName.trim()) return;
+
+  const t = getActive();
+
+  t.participants = t.participants.map(p=>p===name?newName.trim():p);
+
+  t.groups.forEach(g=>g.forEach(u=>{ if(u.name===name) u.name=newName.trim(); }));
+
+  t.leaders = t.leaders.map(l=>({leader: l.leader===name?newName.trim():l.leader, assistant: l.assistant===name?newName.trim():l.assistant}));
+
+  t.separations = t.separations.map(set=>set.map(s=> s===name?newName.trim():s));
+
+  document.getElementById('names').value = t.participants.join('\n');
+
+  document.getElementById('separations').value = t.separations.map(s=>s.join(', ')).join('\n');
+
+  renderGroups();
+
+}
+
+
+
+/* ========== Leader modal / manual set ========== */
+
+function openLeaderModal(groupIdx){
+
+  const t = getActive();
+
+  const modalNameL = prompt('Enter leader name (must exist in participants)');
+
+  if(modalNameL){ t.leaders[groupIdx].leader = modalNameL.trim(); }
+
+  const modalNameA = prompt('Enter assistant name (optional)');
+
+  if(modalNameA){ t.leaders[groupIdx].assistant = modalNameA.trim(); }
+
+  createGroups();
+
+}
+
+
+
+/* ========== Shuffle animation and leader-cycle ========== */
+
+function animateShuffleResult(t){
+
+  const container = document.getElementById('groupsArea');
+
+  container.style.transition = 'transform 0.4s cubic-bezier(.6,-0.05,.735,.045), opacity 0.4s';
+
+  container.style.transform = 'scale(0.92) translateY(-8px)';
+
+  container.style.opacity = '0.85';
+
+  setTimeout(()=>{
+
+    renderGroups();
+
+    container.style.transform = 'scale(1.03) translateY(4px)';
+
+    container.style.opacity = '1';
+
+    setTimeout(()=>{ container.style.transform = 'scale(1) translateY(0)'; },200);
+
+  },300);
+
+}
+
+
+
+function animatePickLeader(groupIdx){
+
+  const t = getActive();
+
+  const candidates = t.groups[groupIdx].map(x=>x.name);
+
+  if(!candidates.length) return;
+
+  const duration = 2200; const step=120; let i=0;
+
+  const highlight = setInterval(()=>{
+
+    const pick = candidates[Math.floor(Math.random()*candidates.length)];
+
+    document.querySelectorAll('.leader-badge').forEach(el=>{ el.classList.remove('on'); if(el.innerText.includes(pick)) el.classList.add('on'); });
+
+  },step);
+
+  setTimeout(()=>{
+
+    clearInterval(highlight);
+
+    const final = candidates[Math.floor(Math.random()*candidates.length)];
+
+    t.leaders[groupIdx].leader = final;
+
+    t.leaders = t.leaders.map((l,idx)=> idx===groupIdx? l : {leader:l.leader,assistant:l.assistant});
+
+    createGroups();
+
+    setTimeout(()=>{ document.querySelectorAll('.leader-badge.on').forEach(e=>e.classList.add('on')); },100);
+
+  },duration);
+
+}
+
+
+
+/* ========== Cycle Leaders (randomize leaders with animation) ========== */
+
+function cycleLeaders(){
+
+  const t = getActive();
+
+  if(!t.groups || t.groups.length===0){ alert('Create groups first'); return; }
+
+  let i=0;
+
+  function next(){ if(i>=t.groupCount) return; animatePickLeader(i); i++; setTimeout(next,900); }
+
+  next();
+
+}
+
+
+
+/* ========== Shuffle / animate all members (rapid cycling) ========== */
+
+function animateShuffleAll(){
+
+  const t = getActive();
+
+  if(!t.participants.length){ alert('No participants'); return; }
+
+  const duration=1600; const tick=80; let cycles=Math.floor(duration/tick);
+
+  const orig = JSON.parse(JSON.stringify(t.groups));
+
+  let k=0; const it = setInterval(()=>{
+
+    shuffle(t.participants);
+
+    t.groups = Array.from({length:t.groupCount},()=>[]);
+
+    for(let i=0;i<t.participants.length;i++) t.groups[i%t.groupCount].push({name:t.participants[i],role:'member'});
+
+    renderGroups(); k++; if(k>cycles){ clearInterval(it); createGroups(true); }
+
+  },tick);
+
+}
+
+
+
+/* ========== Suggestions cycle panel ========== */
+
+function cycleSuggestions(){
+
+  const idx = App.suggestionIndex; const s = App.suggestions[idx];
+
+  const panel = document.getElementById('suggestionContent');
+
+  panel.style.opacity=0; panel.style.transform='translateY(10px)';
+
+  setTimeout(()=>{
+
+    panel.innerHTML = `<h3 class='text-lg font-bold text-purple-300'>${s.title}</h3><div class='mt-2 text-sm whitespace-pre-wrap' style='line-height:1.25'>${s.content}</div>`;
+
+    panel.style.opacity=1; panel.style.transform='translateY(0px)';
+
+    App.suggestionIndex = (App.suggestionIndex+1)%App.suggestions.length;
+
+  },600);
+
+}
+
+setInterval(cycleSuggestions,5000);
+
+
+
+/* ========== Automate suggestions application ========== */
+
+function applySuggestionsToTab(t){
+
+  const parts = App.suggestions[0].content.split(',').map(s=>s.trim()).filter(Boolean);
+
+  t.participants = parts;
+
+  t.separations = [App.suggestions[1].content.split(',').map(s=>s.trim()).filter(Boolean)];
+
+  const extraLeaders = [
+
+    {leader:'STEVEN CONRAD', assistant:'RHEINE DENISE'},
+
+    {leader:'JHASSY NOREENE', assistant:'ASHLEY CHARMAINE'},
+
+    {leader:'JOHAN PAM', assistant:'ATHENA EUNICE'}
+
+  ];
+
+  if(!t.leaders || t.leaders.length!==t.groupCount) t.leaders = Array.from({length:t.groupCount},()=>({leader:'',assistant:''}));
+
+  t.leaders[0].leader = 'JACOB MYRON'; t.leaders[0].assistant = 'ALHANA LISA';
+
+  for(let i=1;i<t.groupCount;i++){
+
+    const idx = (i-1) % extraLeaders.length;
+
+    t.leaders[i].leader = extraLeaders[idx].leader;
+
+    t.leaders[i].assistant = extraLeaders[idx].assistant;
+
+  }
+
+  document.getElementById('names').value = t.participants.join('\n');
+
+  document.getElementById('separations').value = t.separations.map(s=>s.join(', ')).join('\n');
+
+  createGroups();
+
+}
+
+function applySuggestions(){ applySuggestionsToTab(getActive()); }
+
+function applySuggestionsToAll(){ App.tabs.forEach(t=>applySuggestionsToTab(t)); renderTabs(); loadActiveTab(); }
+
+
+
+/* ========== Events wiring ========== */
+
+document.getElementById('newTabBtn').onclick = ()=>{ makeNewTab(); };
+
+document.getElementById('applyNamesBtn').onclick = applyNames;
+
+document.getElementById('applySepBtn').onclick = applySeparations;
+
+document.getElementById('clearNamesBtn').onclick = ()=>{ document.getElementById('names').value=''; };
+
+document.getElementById('clearSepBtn').onclick = ()=>{ document.getElementById('separations').value=''; };
+
+document.getElementById('createGroupsBtn').onclick = ()=>{ createGroups(false); };
+
+document.getElementById('setLeadersBtn').onclick = ()=>{ setupLeadersUI(); };
+
+document.getElementById('shuffleAllBtn').onclick = animateShuffleAll;
+
+document.getElementById('cycleLeadersBtn').onclick = cycleLeaders;
+
+document.getElementById('automateBtn').onclick = applySuggestions;
+
+document.getElementById('applyToAllBtn').onclick = applySuggestionsToAll;
+
+document.getElementById('instanceName').onchange = ()=>{ const t=getActive(); t.name=document.getElementById('instanceName').value; renderTabs(); };
+
+document.getElementById('exportBtn').onclick = ()=>{
+
+  const t = getActive(); const data = JSON.stringify(t,null,2); const blob = new Blob([data],{type:'application/json'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=(t.name||'instance')+'.json'; a.click(); URL.revokeObjectURL(url);
+
+};
+
+
+
+/* ========== Leaders panel UI (old style) ========== */
+
+function setupLeadersUI(){
+
+  const t = getActive();
+
+  if(!t.participants.length){ alert('No participants yet'); return; }
+
+
+
+  const panel = document.getElementById('leadersPanel');
+
+  const container = document.getElementById('leadersContainer');
+
+  container.innerHTML = '';
+
+
+
+  if(!t.leaders || t.leaders.length!==t.groupCount) t.leaders = Array.from({length:t.groupCount},()=>({leader:'',assistant:''}));
+
+
+
+  for(let i=0;i<t.groupCount;i++){
+
+    const row = document.createElement('div'); row.className='flex gap-2 items-center';
+
+
+
+    const label = document.createElement('span'); label.innerText = t.groupNames[i]||`Group ${i+1}`; label.className='w-24';
+
+    row.appendChild(label);
+
+
+
+    const leaderSelect = document.createElement('select'); leaderSelect.className='px-2 py-1 rounded-md bg-slate-800 text-sm';
+
+    t.participants.forEach(p=>{ const opt=document.createElement('option'); opt.value=p; opt.innerText=p; if(p===t.leaders[i].leader) opt.selected=true; leaderSelect.appendChild(opt); });
+
+    row.appendChild(leaderSelect);
+
+
+
+    const asstSelect = document.createElement('select'); asstSelect.className='px-2 py-1 rounded-md bg-slate-800 text-sm';
+
+    asstSelect.innerHTML = `<option value="">(assistant)</option>`;
+
+    t.participants.forEach(p=>{ const opt=document.createElement('option'); opt.value=p; opt.innerText=p; if(p===t.leaders[i].assistant) opt.selected=true; asstSelect.appendChild(opt); });
+
+    row.appendChild(asstSelect);
+
+
+
+    container.appendChild(row);
+
+  }
+
+
+
+  panel.classList.remove('hidden');
+
+
+
+  document.getElementById('applyLeadersBtn').onclick = ()=>{
+
+    const rows = container.children;
+
+    for(let i=0;i<rows.length;i++){
+
+      const sel = rows[i].querySelectorAll('select');
+
+      t.leaders[i].leader = sel[0].value;
+
+      t.leaders[i].assistant = sel[1].value;
+
+    }
+
+    createGroups();
+
+  };
+
+}
+
+
+
+/* ========== Init default tab ========== */
+
+makeNewTab('Default');
+
+cycleSuggestions();
+
+
+
+</script>
+
+</body>
+
+  </html>
