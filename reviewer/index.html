@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>reviewer thing</title>
+
+  <!-- Fonts + icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg-1:#07102a; --bg-2:#0d2040; --card:#0f1726;
+      --accent-a:#00e5ff; --accent-b:#a86bff; --accent-c:#00ffb7;
+      --muted:#9fb0d6; --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Manrope,system-ui,Segoe UI,Roboto,Arial; color:#eaf2ff;
+      background: radial-gradient(600px 380px at 8% 12%, rgba(0,229,255,0.06), transparent),
+                  radial-gradient(500px 320px at 92% 88%, rgba(168,107,255,0.06), transparent),
+                  linear-gradient(180deg,var(--bg-1),var(--bg-2));
+      display:flex; align-items:flex-start; justify-content:center; padding:36px;
+    }
+
+    .app {
+      width:100%; max-width:1100px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:18px; padding:22px; box-shadow: 0 10px 40px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.04);
+    }
+
+    header{display:flex;gap:16px;align-items:center;margin-bottom:18px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent-a),var(--accent-b));display:flex;align-items:center;justify-content:center;font-weight:700;color:#021;box-shadow:0 6px 20px rgba(0,0,0,0.4)}
+    h1{font-size:1.35rem;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:0.95rem}
+
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
+
+    /* Left: tools */
+    .panel{background:var(--card);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03)}
+    .panel h3{margin:0 0 8px 0}
+    textarea.input{width:100%;min-height:240px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:inherit;resize:vertical}
+
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .btn{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:10px;color:inherit;font-weight:600;cursor:pointer;transition:all .22s;display:inline-flex;align-items:center;gap:8px}
+    .btn:hover{transform:translateY(-4px);box-shadow:0 14px 36px rgba(0,0,0,0.5)}
+    .btn.primary{background:linear-gradient(90deg,var(--accent-a),var(--accent-b));color:#021;border:none}
+
+    .file-input{display:flex;gap:8px;align-items:center}
+    input[type=file]{display:none}
+    .fake-file{padding:8px 10px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px dashed rgba(255,255,255,0.03);cursor:pointer}
+
+    /* Right: preview & flashcards */
+    .preview{display:flex;flex-direction:column;gap:12px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    .highlights{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:999px;font-weight:600}
+
+    .flashcards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .flash{padding:10px;border-radius:10px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.03)}
+    .flash h4{margin:0 0 6px 0}
+
+    .settings{display:flex;flex-direction:column;gap:8px}
+    label.switch{display:flex;align-items:center;gap:8px}
+
+    footer{margin-top:14px;display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:0.9rem}
+
+    /* responsive */
+    @media (max-width:1000px){.grid{grid-template-columns:1fr 360px}}
+    @media (max-width:800px){.grid{grid-template-columns:1fr} .preview{order:2}}
+
+    /* subtle anim */
+    .fade{opacity:0;transform:translateY(6px);animation:fade .4s ease forwards}
+    @keyframes fade{to{opacity:1;transform:none}}
+  </style>
+</head>
+<body>
+  <div class="app fade">
+    <header>
+      <div class="logo">RG</div>
+      <div>
+        <h1>reviewer thing</h1>
+        <p class="lead">more useful for just getting pdf text</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: editor + tools -->
+      <div>
+        <section class="panel">
+          <h3>Document / Notes</h3>
+          <textarea id="editor" class="input" placeholder="Paste notes here or upload a PDF/PPTX to extract text..."></textarea>
+
+          <div class="controls" style="margin-top:12px">
+            <label class="file-input">
+              <span class="fake-file btn">📄 Upload file</span>
+              <input id="file" type="file" accept=".pdf, .pptx, .ppt, .docx" />
+            </label>
+            <button class="btn" id="extractBtn">🔎 Extract Keywords</button>
+            <button class="btn primary" id="flashBtn">🃏 Make Flashcards</button>
+            <button class="btn" id="clearBtn">✖ Clear</button>
+          </div>
+
+          <div style="margin-top:10px" class="settings">
+            <label class="switch"> <input id="autoSave" type="checkbox"> Auto-save to localStorage</label>
+            <label>Min word frequency for keyword: <input id="minFreq" type="number" value="2" min="1" style="width:68px;margin-left:8px"></label>
+          </div>
+
+        </section>
+
+        <section class="panel" style="margin-top:12px">
+          <h3>Export</h3>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" id="exportPdf">⬇ Export PDF</button>
+            <button class="btn" id="exportDocx">⬇ Export DOCX</button>
+            <button class="btn" id="exportTxt">⬇ Export TXT</button>
+          </div>
+          <p style="margin-top:10px;color:var(--muted);font-size:0.9rem">PDF uses client-side rendering and DOCX uses a document layout. might be too simplified.</p>
+        </section>
+      </div>
+
+      <!-- RIGHT: preview + flashcards -->
+      <aside class="preview">
+        <div class="card">
+          <h3>Highlights</h3>
+          <div id="highlights" class="highlights" aria-live="polite"> <small style="color:var(--muted)">No highlights yet</small></div>
+        </div>
+
+<!-- Auto Formatter Section -->
+<div class="card">
+  <h2>Auto Formatter (Broken as of the moment)</h2>
+  <textarea id="rawInput" placeholder="Paste your raw text here..." style="width:100%; height:120px; border-radius:0.75rem; padding:0.75rem; background:#0d1117; color:#fff; border:none; resize:none;"></textarea>
+  <button id="formatButton" style="margin-top:0.75rem; background:#2563eb; color:white; border:none; padding:0.5rem 1rem; border-radius:0.5rem; cursor:pointer;">Format Text</button>
+
+  <div id="formattedOutput" style="margin-top:1rem; background:#111827; padding:0.75rem; border-radius:0.75rem; min-height:100px;">
+    <p style="color:#9ca3af;">Formatted output will appear here...</p>
+  </div>
+</div>
+
+<script>
+  document.getElementById("formatButton").addEventListener("click", () => {
+    const input = document.getElementById("rawInput").value;
+    let formatted = input
+      // Replace multiple newlines with double line breaks
+      .replace(/\n{2,}/g, "\n\n")
+      // Convert *word* to bold
+      .replace(/\*(.*?)\*/g, "<b>$1</b>")
+      // Convert _word_ to italic
+      .replace(/_(.*?)_/g, "<i>$1</i>")
+      // Convert lines starting with - or * to bullet points
+      .replace(/(^|\n)[-\*]\s+(.*)/g, "$1• $2")
+      // Trim extra spaces
+      .trim();
+
+    document.getElementById("formattedOutput").innerHTML = formatted || "<p style='color:#9ca3af;'>No text to format.</p>";
+  });
+</script>
+>
+
+        <div class="card">
+          <h3>Preview</h3>
+          <div id="previewText" style="white-space:pre-wrap;color:var(--muted);max-height:220px;overflow:auto;padding:6px;border-radius:8px"></div>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <div>Haugh</div>
+      <div id="status">Ready</div>
+    </footer>
+  </div>
+
+  <!-- Libraries (CDNs) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.1.0/docx.umd.js"></script>
+
+  <script>
+    // Simple utilities
+    const $ = id => document.getElementById(id);
+    const editor = $('editor');
+    const preview = $('previewText');
+    const highlightsEl = $('highlights');
+    const flashEl = $('flashcards');
+    const status = $('status');
+
+    // Auto-save
+    if(localStorage.getItem('rg_notes')) editor.value = localStorage.getItem('rg_notes');
+    if(localStorage.getItem('rg_notes') && document.getElementById('autoSave')) document.getElementById('autoSave').checked = true;
+
+    editor.addEventListener('input', ()=>{
+      preview.textContent = editor.value;
+      if(document.getElementById('autoSave').checked) localStorage.setItem('rg_notes', editor.value);
+    });
+
+    // File upload handling: PDF, PPTX (simple), DOCX (not fully supported for complex docx but we accept)
+    $('file').addEventListener('change', async (ev)=>{
+      const f = ev.target.files[0];
+      if(!f) return;
+      status.textContent = `Reading ${f.name}...`;
+      const name = f.name.toLowerCase();
+      try{
+        if(name.endsWith('.pdf')){
+          const text = await extractTextFromPDF(f);
+          editor.value += (editor.value? '\n\n':'') + text;
+        } else if(name.endsWith('.pptx') || name.endsWith('.ppt')){
+          const text = await extractTextFromPPTX(f);
+          editor.value += (editor.value? '\n\n':'') + text;
+        } else if(name.endsWith('.docx')){
+          const text = await extractTextFromDocx(f);
+          editor.value += (editor.value? '\n\n':'') + text;
+        } else {
+          status.textContent = 'Unsupported file type';
+        }
+        editor.dispatchEvent(new Event('input'));
+        status.textContent = 'File loaded';
+      }catch(err){
+        console.error(err); status.textContent = 'Error reading file';
+      }
+    });
+
+    // PDF extraction using pdf.js
+    async function extractTextFromPDF(file){
+      const arrayBuffer = await file.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({data:arrayBuffer});
+      const pdf = await loadingTask.promise;
+      let full = '';
+      for(let i=1;i<=pdf.numPages;i++){
+        const page = await pdf.getPage(i);
+        const txt = await page.getTextContent();
+        const pageText = txt.items.map(s=>s.str).join(' ');
+        full += `\n\n${pageText}`;
+      }
+      return full.trim();
+    }
+
+    // PPTX extraction via JSZip + slide xml parsing (simple text extraction)
+    async function extractTextFromPPTX(file){
+      const z = new JSZip();
+      const content = await z.loadAsync(file);
+      let text = '';
+      // slides usually in ppt/slides/slide1.xml
+      const files = Object.keys(content.files).filter(p=>p.match(/ppt\/slides\/slide\d+\.xml/));
+      files.sort((a,b)=> a.localeCompare(b, undefined, {numeric:true}));
+      for(const f of files){
+        const data = await content.file(f).async('string');
+        // quick-and-dirty: strip tags but preserve text nodes
+        const cleaned = data.replace(/<a:t[^>]*>(.*?)<\/a:t>/g, (m,p)=> p + ' ')
+                            .replace(/<[^>]+>/g,' ')
+                            .replace(/\s+/g,' ').trim();
+        text += '\n\n' + cleaned;
+      }
+      return text.trim();
+    }
+
+    // DOCX extraction (basic) reading word/document.xml
+    async function extractTextFromDocx(file){
+      const z = new JSZip();
+      const content = await z.loadAsync(file);
+      const doc = await content.file('word/document.xml').async('string');
+      const cleaned = doc.replace(/<w:t[^>]*>(.*?)<\/w:t>/g,(m,p)=>p+' ').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      return cleaned;
+    }
+
+    // Keyword extraction (naive frequency-based + ignoring stopwords)
+    const stopwords = new Set(['the','a','an','and','or','to','of','in','on','for','with','that','is','are','was','were','this','it','as','by','from','be','at','which','but','not']);
+    function extractKeywords(text, minFreq=2){
+      const words = text.toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(Boolean);
+      const freq = {};
+      for(const w of words){ if(w.length<3) continue; if(stopwords.has(w)) continue; freq[w]=(freq[w]||0)+1; }
+      const arr = Object.keys(freq).map(k=>({k,v:freq[k]})).sort((a,b)=>b.v-a.v);
+      return arr.filter(x=>x.v>=minFreq).slice(0,40);
+    }
+
+    // Flashcard generator (very simple: split by lines; heuristics: lines with ":" or "-" or "–" split into term/def)
+    function makeFlashcardsFromText(text){
+      const lines = text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      const cards = [];
+      for(const l of lines){
+        if(l.includes(':')){
+          const i = l.indexOf(':'); cards.push({q:l.slice(0,i).trim(), a:l.slice(i+1).trim()});
+        } else if(l.match(/\b(is|are|means|refers to)\b/)){
+          const m = l.split(/\b(is|are|means|refers to)\b/); cards.push({q:m[0].trim(), a:m.slice(2).join(' ').trim()});
+        }
+      }
+      // also try glossary-like pattern: "Term — definition"
+      for(const l of lines){
+        const m = l.split(/\s[\-—–]\s/);
+        if(m.length===2) cards.push({q:m[0].trim(), a:m[1].trim()});
+      }
+      // fallback: create cards from top keywords with surrounding sentence as definition
+      const keywords = extractKeywords(text, parseInt($('minFreq').value || 2)).slice(0,10);
+      for(const k of keywords){
+        const re = new RegExp('([^.!?]*\\b'+k.k+'\\b[^.!?]*)','ig');
+        const m = re.exec(text);
+        const sent = m ? m[1].trim() : '';
+        if(sent) cards.push({q:k.k, a: sent});
+      }
+      // dedupe simple
+      const seen = new Set();
+      const uniq = [];
+      for(const c of cards){ const key = c.q + '||' + c.a; if(!seen.has(key)){ seen.add(key); uniq.push(c); } }
+      return uniq.slice(0,60);
+    }
+
+    // UI actions
+    $('extractBtn').addEventListener('click', ()=>{
+      const text = editor.value;
+      if(!text.trim()) return status.textContent='No text to analyze';
+      const min = parseInt($('minFreq').value||2);
+      const keys = extractKeywords(text,min);
+      highlightsEl.innerHTML = keys.length? keys.map(k=>`<div class="chip">${k.k} <small style="opacity:.6;margin-left:6px">(${k.v})</small></div>`).join('') : '<small style="color:var(--muted)">No keywords found</small>';
+      status.textContent = `Found ${keys.length} keywords`;
+    });
+
+    $('flashBtn').addEventListener('click', ()=>{
+      const text = editor.value;
+      if(!text.trim()) return status.textContent='No text to generate flashcards from';
+      const cards = makeFlashcardsFromText(text);
+      if(!cards.length){ flashEl.innerHTML = '<small style="color:var(--muted)">No flashcards generated</small>'; status.textContent='No flashcards'; return; }
+      flashEl.innerHTML = cards.map(c=>`<div class="flash"><h4>${escapeHtml(c.q)}</h4><div style="color:var(--muted);font-size:0.95rem">${escapeHtml(c.a)}</div></div>`).join('');
+      status.textContent = `Created ${cards.length} flashcards`;
+    });
+
+    $('clearBtn').addEventListener('click', ()=>{ editor.value=''; preview.textContent=''; highlightsEl.innerHTML='<small style="color:var(--muted)">No highlights yet</small>'; flashEl.innerHTML='<small style="color:var(--muted)">No flashcards yet</small>'; localStorage.removeItem('rg_notes'); status.textContent='Cleared'; });
+
+    // Export handlers
+    $('exportTxt').addEventListener('click', ()=>{
+      const blob = new Blob([editor.value],'text/plain'); downloadBlob(blob,'reviewer.txt');
+    });
+
+    $('exportPdf').addEventListener('click', async ()=>{
+      try{
+        status.textContent='Rendering PDF...';
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({unit:'pt',format:'a4'});
+        const lines = doc.splitTextToSize(editor.value || '', 540);
+        doc.setFont('Helvetica'); doc.setFontSize(12);
+        let y = 40;
+        doc.text('Advanced Reviewer', 40, y); y+=24;
+        for(const line of lines){
+          if(y>780){ doc.addPage(); y=40; }
+          doc.text(line,40,y); y+=14;
+        }
+        doc.save('reviewer.pdf');
+        status.textContent='PDF ready';
+      }catch(err){ console.error(err); status.textContent='PDF export failed'; }
+    });
+
+    $('exportDocx').addEventListener('click', async ()=>{
+      try{
+        status.textContent='Building DOCX...';
+        const { Document, Packer, Paragraph, TextRun } = window.docx;
+        const doc = new Document();
+        const lines = (editor.value||'').split(/\r?\n/);
+        for(const l of lines){
+          doc.addSection({children:[ new Paragraph({children:[ new TextRun({text: l || ' '})]}) ]});
+        }
+        const packer = new Packer();
+        const blob = await packer.toBlob(doc);
+        downloadBlob(blob,'reviewer.docx');
+        status.textContent='DOCX ready';
+      }catch(err){ console.error(err); status.textContent='DOCX export failed'; }
+    });
+
+    function downloadBlob(blob, filename){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+
+    // initial preview
+    preview.textContent = editor.value;
+
+    // Save on unload if autoSave
+    window.addEventListener('beforeunload', ()=>{ if(document.getElementById('autoSave').checked) localStorage.setItem('rg_notes', editor.value) });
+
+  </script>
+</body>
+</html>
