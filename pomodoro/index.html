@@ -8,6 +8,9 @@
   <!-- Fonts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.2/tinycolor.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Poppins:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.4.2/tinycolor.min.js"></script>
 
   <style>
     :root{
@@ -20,6 +23,47 @@
       --card-radius: 24px;
       --glass-blur: 18px;
       --width: 540px;
+    }
+
+    /* keep all your existing styles here exactly as in your original file */
+    /* only changes: smaller text uses DM Sans + smoother transitions */
+    body, select, label, .muted, .quote, p.lead, #sessionLabel {
+      font-family: "DM Sans", sans-serif;
+    }
+    h1, .btn, #bigTimer {
+      font-family: "Poppins", sans-serif;
+    }
+
+/* softer transitions */
+.btn, .mode-btn, select, .card {
+  transition: all 0.4s cubic-bezier(0.25,0.8,0.25,1);
+}
+
+/* ensure settings panel doesn't pop out during height animations */
+
+/* settings panel - controlled by JS/GSAP (do not let CSS animate these) */
+.settings {
+  display: block;        /* keep it in flow so we can measure scrollHeight */
+  height: 0;             /* hidden by height */
+  opacity: 0;            /* hidden by opacity */
+  overflow: hidden;      /* prevent pop-out */
+  pointer-events: none;  /* block interactions while closed */
+  will-change: height, opacity;
+  transform-origin: top;
+}
+
+/* when JS considers it "open", add .open to restore natural sizing */
+.settings.open {
+  /* these are fallback states; actual height is controlled by GSAP inline style */
+  height: auto;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+    /* smoother dropdowns */
+    select:focus {
+      box-shadow: 0 0 12px var(--accent);
+      transform: scale(1.02);
     }
 
     /* Reset + base */
@@ -232,10 +276,60 @@ input, textarea {
       border:1px solid rgba(255,255,255,0.06);
     }
 
-#siteVolume {
-  width: 100%;
-  accent-color: var(--accent);
+/* === Wide bottom-right volume bar === */
+.volume-bar {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 320px;                     /* much wider */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-top-left-radius: 16px;     /* only top left rounded */
+  backdrop-filter: blur(20px) saturate(160%);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -2px 20px rgba(0,0,0,0.25);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  opacity: 0.95;
+  z-index: 9999;
+}
+
+.volume-bar:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.volume-bar .icon {
+  font-size: 18px;
+  color: #fff;                     /* pure white for modern look */
+  text-shadow: 0 0 6px rgba(255,255,255,0.3);
+}
+
+.volume-bar input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  overflow: hidden;
+}
+
+.volume-bar input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.volume-bar input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
 }
 
     /* small control row (modes) */
@@ -460,9 +554,15 @@ input, textarea {
           </div>
         </div>
       </div>
-
+	  
     </div>
   </div>
+
+	  <!-- Global Volume Control -->
+<div id="volumeControl" class="glass volume-bar">
+  <span class="icon">🕪</span>
+  <input type="range" id="volumeSlider" min="0" max="100" value="70" />
+</div>
 
 <script>
 /* =========================
@@ -500,6 +600,53 @@ input, textarea {
   const shortMinInput = document.getElementById('shortMin');
   const longMinInput = document.getElementById('longMin');
 
+
+
+function fadeAudio(audio, toVol, dur = 1000, stopAfter = false) {
+  if (!audio) return;
+  const startVol = audio.volume ?? 0;
+  const startT = performance.now();
+  const tick = (t) => {
+    const p = Math.min((t - startT) / dur, 1);
+    audio.volume = startVol + (toVol - startVol) * p;
+    if (p < 1) requestAnimationFrame(tick);
+    else if (stopAfter && toVol === 0) {
+      try { audio.pause(); audio.currentTime = 0; } catch {}
+    }
+  };
+  requestAnimationFrame(tick);
+}
+
+/* === Global Volume Control === */
+let globalVolume = parseFloat(localStorage.getItem("globalVolume") || "0.7");
+
+const volumeSlider = document.getElementById("volumeSlider");
+if (volumeSlider) {
+  // set initial slider position
+  volumeSlider.value = globalVolume * 100;
+
+  // helper to apply volume smoothly
+  const applyVolume = (val) => {
+    globalVolume = val;
+    localStorage.setItem("globalVolume", val.toFixed(2));
+
+    // adjust all currently playing sounds
+    [bgMusicAudio, previewAudio, alarmAudio].forEach((a) => {
+      if (a && !a.paused) {
+        try {
+          gsap.to(a, { volume: val * (a.baseVolume || 1), duration: 0.4 });
+        } catch {}
+      }
+    });
+  };
+
+  // listen to slider input
+  volumeSlider.addEventListener("input", (e) => {
+    const val = e.target.value / 100;
+    applyVolume(val);
+  });
+}
+
   // State
   let preset = 'pomodoro'; // current preset
   let isRunning = false;
@@ -517,6 +664,47 @@ input, textarea {
   const CIRCUM = 2 * Math.PI * R;
   progressCircle.style.strokeDasharray = CIRCUM;
   progressCircle.style.strokeDashoffset = CIRCUM;
+
+function fadeQuote(newText) {
+  if (!quoteEl) return;
+  gsap.to(quoteEl, {
+    opacity: 0,
+    y: -6,
+    duration: 0.45,
+    ease: "power1.in",
+    onComplete: () => {
+      quoteEl.textContent = newText;
+      gsap.fromTo(
+        quoteEl,
+        { opacity: 0, y: 6 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }
+      );
+    }
+  });
+}
+
+gsap.to(quoteEl, {
+  opacity: 0.9,
+  duration: 3,
+  repeat: -1,
+  yoyo: true,
+  ease: "power1.inOut"
+});
+
+
+// change quote every 15–20 seconds
+function startQuoteRotation() {
+  let currentIndex = 0;
+  setInterval(() => {
+    const randomIndex = Math.floor(Math.random() * quotes.length);
+    const nextQuote = quotes[randomIndex];
+    fadeQuote(nextQuote);
+  }, 15000 + Math.random() * 5000); // random 15–20 s
+}
+
+// start rotation after page load
+startQuoteRotation();
+
 
   // sample motivational quotes (cute)
   const quotes = [
@@ -680,10 +868,58 @@ input, textarea {
     startBtn.addEventListener('click', onStart);
     pauseBtn.addEventListener('click', onPause);
     resetBtn.addEventListener('click', onReset);
-    toggleSettingsBtn.addEventListener('click', () => {
-      const open = settingsPanel.classList.toggle('open');
-      settingsPanel.setAttribute('aria-hidden', !open);
+toggleSettingsBtn.addEventListener("click", () => {
+  const isOpen = settingsPanel.classList.contains("open");
+
+  if (isOpen) {
+    /* --- Smooth close --- */
+    const currentHeight = settingsPanel.offsetHeight;
+    settingsPanel.style.height = currentHeight + "px";
+    settingsPanel.style.overflow = "hidden";
+
+    // Force browser to commit before animating
+    requestAnimationFrame(() => {
+      gsap.to(settingsPanel, {
+        height: 0,
+        opacity: 0,
+        duration: 0.5,
+        ease: "power2.inOut",
+        onStart: () => settingsPanel.setAttribute("aria-hidden", "true"),
+        onComplete: () => {
+          settingsPanel.classList.remove("open");
+          settingsPanel.style.display = "none";
+          settingsPanel.style.height = "";
+          settingsPanel.style.opacity = "";
+          settingsPanel.style.overflow = "";
+        }
+      });
     });
+  } else {
+    /* --- Smooth open --- */
+    settingsPanel.style.display = "block";
+    settingsPanel.style.height = "auto";
+    const targetHeight = settingsPanel.scrollHeight;
+    settingsPanel.style.height = "0px";
+    settingsPanel.style.opacity = "0";
+    settingsPanel.style.overflow = "hidden";
+    settingsPanel.setAttribute("aria-hidden", "false");
+
+    // let browser register height:0 before animating
+    requestAnimationFrame(() => {
+      gsap.to(settingsPanel, {
+        height: targetHeight,
+        opacity: 1,
+        duration: 0.6,
+        ease: "power2.out",
+        onComplete: () => {
+          settingsPanel.classList.add("open");
+          settingsPanel.style.height = "auto";
+          settingsPanel.style.overflow = "";
+        }
+      });
+    });
+  }
+});
 
     // ringtone & music handlers
     ringtoneSelect.addEventListener('change', ()=> setStored('ringtone', ringtoneSelect.value));
@@ -823,25 +1059,27 @@ input, textarea {
 
     let previewAudio;
 
-    previewBtn.addEventListener('click', () => {
-      if (previewAudio) {
-        previewAudio.pause();
-        previewAudio.currentTime = 0;
-      }
+previewBtn.addEventListener('click', () => {
+  // stop existing preview with fade
+  if (window.previewAudio) fadeAudio(window.previewAudio, 0, 800, true);
 
-      const selectedRingtone = ringtoneSelect.value;
-      previewAudio = new Audio(selectedRingtone);
-      previewAudio.play();
+  const src = ringtoneSelect.value;
+  const audio = new Audio(src);
+	audio.baseVolume = 0.9;
+	audio.volume = globalVolume * audio.baseVolume;
+	audio.play()
+  .then(() => fadeAudio(audio, audio.baseVolume * globalVolume, 600))
+  .catch(() => {});
+  window.previewAudio = audio;
 
-      setTimeout(() => {
-        if (previewAudio) {
-          previewAudio.pause();
-          previewAudio.currentTime = 0;
-        }
-      }, 10000);
-    });
+  // fade back out after 8 s
+  setTimeout(() => fadeAudio(audio, 0, 800, true), 8000);
+});
+
 
     ringtoneSelect.addEventListener('change', () => setStored('ringtone', ringtoneSelect.value));
+	
+	
   });
 })();
 
@@ -918,28 +1156,41 @@ input, textarea {
     a.play().catch(()=>{});
   }
 
-  function onMusicSelect(e){
-    const val = e.target.value;
-    setStored('music', val);
-    if(bgMusicAudio){
-      bgMusicAudio.pause(); bgMusicAudio = null;
-    }
-    if(val){
-      bgMusicAudio = new Audio(val);
-      bgMusicAudio.loop = true;
-      bgMusicAudio.volume = 0.28;
-      bgMusicAudio.play().catch(()=>{});
-    }
-  }
+function onMusicSelect(e) {
+  const val = e.target.value;
+  setStored('music', val);
 
-  function onUploadMusic(e){
-    const f = e.target.files[0];
-    if(!f) return;
-    const url = URL.createObjectURL(f);
-    setStored('musicCustom', url);
-    if(bgMusicAudio){ bgMusicAudio.pause(); bgMusicAudio = null; }
-    bgMusicAudio = new Audio(url); bgMusicAudio.loop=true; bgMusicAudio.volume=0.28; bgMusicAudio.play().catch(()=>{});
+  // fade out current track
+  if (bgMusicAudio) fadeAudio(bgMusicAudio, 0, 1000, true);
+
+  if (val) {
+    const next = new Audio(val);
+    next.loop = true;
+	next.baseVolume = 0.28;
+	next.volume = globalVolume * next.baseVolume;
+	next.play()
+		.then(() => fadeAudio(next, next.baseVolume * globalVolume, 1000))
+		.catch(() => {});
+	bgMusicAudio = next;
+  } else {
+    bgMusicAudio = null;
   }
+}
+
+function onUploadMusic(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const url = URL.createObjectURL(f);
+  setStored('musicCustom', url);
+
+  if (bgMusicAudio) fadeAudio(bgMusicAudio, 0, 1000, true);
+
+  const next = new Audio(url);
+  next.loop = true;
+  next.volume = 0;
+  next.play().then(() => fadeAudio(next, 0.28, 1000)).catch(()=>{});
+  bgMusicAudio = next;
+}
 
   // background image functions
   function onUploadBg(e){
@@ -1025,5 +1276,6 @@ input, textarea {
 
 })();
 </script>
+
 </body>
 </html>
