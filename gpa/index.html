@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grade Average Calculator</title>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: rgba(255,255,255,0.08);
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --danger: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Inter", system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1e293b, var(--bg));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--card);
+      backdrop-filter: blur(14px);
+      border-radius: 1.5rem;
+      padding: 2rem 2.5rem;
+      box-shadow: 0 30px 80px rgba(0,0,0,.4);
+      animation: fadeUp .8s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      margin: 0 0 0.25rem;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 0.6rem;
+    }
+
+    th {
+      font-weight: 500;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+/* Target the dropdown container (your inline div) */
+div[style*="text-align:center"] {
+  margin: 1.5rem 0;
+  text-align: left;          /* move everything to the left */
+  display: inline-block;     /* shrink container width */
+  transform: translateX(-20px); /* shift left by 20px, adjust as needed */
+}
+
+/* Make label sit on top */
+div[style*="text-align:center"] label {
+  display: block; 
+  margin-bottom: 0.4rem; 
+  color: #94a3b8;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+/* Style the select */
+div[style*="text-align:center"] select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: rgba(0,0,0,0.25);
+  color: white;
+  font-size: 0.95rem;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(6px);
+  min-width: 160px; /* optional, makes it readable */
+}
+
+/* Hover effect */
+div[style*="text-align:center"] select:hover {
+  box-shadow: 0 0 6px rgba(56,189,248,0.4);
+}
+
+/* Focus effect */
+div[style*="text-align:center"] select:focus {
+  box-shadow: 0 0 12px rgba(34,197,94,0.5);
+}
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    td {
+      background: rgba(255,255,255,0.06);
+      padding: 0.6rem;
+      border-radius: 0.6rem;
+      text-align: center;
+      transition: background .3s ease;
+    }
+
+    td.subject {
+      font-weight: 500;
+      color: #f8fafc;
+    }
+
+    td:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    input::placeholder {
+      color: #64748b;
+    }
+
+    .units {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .results {
+      margin-top: 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .result-box {
+      background: linear-gradient(135deg, rgba(56,189,248,0.2), rgba(34,197,94,0.2));
+      border-radius: 1.2rem;
+      padding: 1.5rem;
+      text-align: center;
+      animation: glow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 20px rgba(56,189,248,.2); }
+      to { box-shadow: 0 0 35px rgba(34,197,94,.35); }
+    }
+
+    .result-title {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .result-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .note {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .results {
+        grid-template-columns: 1fr;
+      }
+    }
+	
+.subtitle {
+  text-align: left;
+  height: 1.6em;         /* adjust for one line */
+  overflow: hidden;
+  position: relative;
+  font-size: 1rem;
+}
+
+.subtitle {
+  text-align: left;
+  height: 1.6em;         /* adjust for one line */
+  overflow: hidden;
+  position: relative;
+  font-size: 1rem;
+}
+
+.subtitle-text {
+  display: block;
+  opacity: 0;
+  position: absolute;
+  width: 100%;
+  left: 0;
+  top: 0;
+  animation: cycle 65s linear infinite;
+}
+
+/* Assign each message a delay proportional to its position */
+.subtitle-text:nth-child(1)  { animation-delay: 0s; }
+.subtitle-text:nth-child(2)  { animation-delay: 5s; }
+.subtitle-text:nth-child(3)  { animation-delay: 10s; }
+.subtitle-text:nth-child(4)  { animation-delay: 15s; }
+.subtitle-text:nth-child(5)  { animation-delay: 20s; }
+.subtitle-text:nth-child(6)  { animation-delay: 25s; }
+.subtitle-text:nth-child(7)  { animation-delay: 30s; }
+.subtitle-text:nth-child(8)  { animation-delay: 35s; }
+.subtitle-text:nth-child(9)  { animation-delay: 40s; }
+.subtitle-text:nth-child(10) { animation-delay: 45s; }
+.subtitle-text:nth-child(11) { animation-delay: 50s; }
+.subtitle-text:nth-child(12) { animation-delay: 55s; }
+.subtitle-text:nth-child(13) { animation-delay: 60s; }
+
+/* Keyframes: fade-in 0.5s, hold 4s, fade-out 0.5s */
+@keyframes cycle {
+  0%   { opacity: 0; transform: translateY(20px); }
+  0.77% { opacity: 1; transform: translateY(0); }  /* fade-in 0.5s / 65s ≈ 0.77% */
+  7.69% { opacity: 1; transform: translateY(0); }  /* hold 4s / 65s ≈ 6.15%, starts at 0.77% → total 7.69% */
+  8.46% { opacity: 0; transform: translateY(-20px); } /* fade-out 0.5s / 65s ≈ 0.77%, ends at 8.46% */
+  100% { opacity: 0; transform: translateY(-20px); }
+}
+
+
+  </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/smooth-scrollbar@8.7.1/dist/smooth-scrollbar.js"></script>
+
+
+<div style="margin:1.5rem 0;text-align:center;">
+  <label for="mode" style="margin-right:0.5rem;color:#94a3b8;">Grade Display Mode:</label>
+  <select id="mode" onchange="calculate()" style="padding:0.4rem 0.6rem;border-radius:0.5rem;border:none;background:rgba(0,0,0,0.25);color:white;">
+    <option value="numeric">Numeric</option>
+    <option value="gpa">GPA (4.0 Scale)</option>
+    <option value="letter">Letter Grade</option>
+  </select>
+</div>
+
+  <div class="card">
+    <h1>grade average calculator</h1>
+<div class="subtitle">
+  <span class="subtitle-text">welcome!</span>
+  <span class="subtitle-text">keep your grades updated for an accurate GWA!</span>
+  <span class="subtitle-text">GPA conversion included</span>
+  <span class="subtitle-text">remember to check your final averages</span>
+  <span class="subtitle-text">God I should be studying rn</span>
+  <span class="subtitle-text">you're technically one in a billion since nobody else is coming here</span>
+  <span class="subtitle-text">thank you!</span>
+  <span class="subtitle-text">one day to a new beginning</span>
+  <span class="subtitle-text">are you happy?</span>
+  <span class="subtitle-text">you good?</span>
+  <span class="subtitle-text">how're your grades?</span>
+  <span class="subtitle-text">merry christmas!</span>
+  <span class="subtitle-text">not all who wander are lost</span>
+</div>
+
+
+
+    <table id="gradeTable">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Q1</th>
+          <th>Q2</th>
+          <th>Q3</th>
+          <th>Q4</th>
+          <th>Final Avg</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="results">
+  <div class="result-box">
+    <div class="result-title">General Weighted Average (GWA)</div>
+    <div class="result-value" id="gwa">—</div>
+  </div>
+  <div class="result-box">
+    <div class="result-title">Total Units Counted</div>
+    <div class="result-value" id="units">—</div>
+  </div>
+  <div class="result-box">
+    <div class="result-title">Numeric</div>
+    <div class="result-value" id="mode-numeric">—</div>
+  </div>
+  <div class="result-box">
+    <div class="result-title">GPA (4.0 Scale)</div>
+    <div class="result-value" id="mode-gpa">—</div>
+  </div>
+  <div class="result-box">
+    <div class="result-title">Letter Grade</div>
+    <div class="result-value" id="mode-letter">—</div>
+  </div>
+</div>
+
+
+    <div class="note">
+      Units: Filipino (1.3), English (1.9), Math (1.9), Science (1.9), CLE (1.3), AP (1.3), TLE (1.5), PE & Health (0.8)
+    </div>
+  </div>
+
+  <script>
+    const tbody = document.querySelector("#gradeTable tbody");
+
+const subjects = [
+  { name: "Filipino", units: 1.3 },
+  { name: "English", units: 1.9 },
+  { name: "Mathematics", units: 1.9 },
+  { name: "Science", units: 1.9 },
+  { name: "CLE", units: 1.3 },
+  { name: "AP", units: 1.3 },
+  { name: "TLE", units: 1.5 },
+  { name: "PE & Health", units: 0.8 }
+];
+
+// Create table rows dynamically
+subjects.forEach((subj, i) => {
+  const row = document.createElement("tr");
+  row.innerHTML = `
+    <td class="subject">${subj.name}<div class="units">${subj.units} units</div></td>
+    ${Array.from({ length: 4 }).map(() => `<td><input type="number" min="0" max="100" step="0.01" placeholder="—"></td>`).join('')}
+    <td class="final">—</td>
+  `;
+  tbody.appendChild(row);
+});
+
+// Listen for input changes
+document.addEventListener("input", calculate);
+
+// Formatting function — must be **outside** calculate
+function formatGrade(value, mode) {
+  if (mode === "numeric") return value.toFixed(2);
+  if (mode === "gpa") {
+    if (value >= 97) return "4.0";
+    if (value >= 94) return "3.75";
+    if (value >= 91) return "3.5";
+    if (value >= 88) return "3.25";
+    if (value >= 85) return "3.0";
+    if (value >= 82) return "2.75";
+    if (value >= 79) return "2.5";
+    if (value >= 76) return "2.25";
+    if (value >= 75) return "2.0";
+    return "1.0";
+  }
+  if (mode === "letter") {
+    if (value >= 97) return "A+";
+    if (value >= 94) return "A";
+    if (value >= 91) return "A-";
+    if (value >= 88) return "B+";
+    if (value >= 85) return "B";
+    if (value >= 82) return "B-";
+    if (value >= 79) return "C+";
+    if (value >= 76) return "C";
+    if (value >= 75) return "D";
+    return "F";
+  }
+  return value.toFixed(2);
+}
+
+// Main calculate function
+function calculate() {
+  const mode = document.getElementById("mode").value; // numeric, gpa, or letter
+  let gwaSum = 0;
+  let unitSum = 0;
+
+  [...tbody.children].forEach((row, index) => {
+    const inputs = row.querySelectorAll("input");
+    const grades = [...inputs].map(i => parseFloat(i.value)).filter(v => !isNaN(v) && v > 0);
+    const finalCell = row.querySelector(".final");
+
+    if (grades.length > 0) {
+      const avg = grades.reduce((a, b) => a + b, 0) / grades.length;
+      finalCell.textContent = formatGrade(avg, mode); // updated in-place
+
+      gwaSum += avg * subjects[index].units;
+      unitSum += subjects[index].units;
+    } else {
+      finalCell.textContent = "—";
+    }
+  });
+
+  const gwaValue = unitSum ? gwaSum / unitSum : null;
+  document.getElementById("gwa").textContent = gwaValue !== null ? gwaValue.toFixed(2) : "—";
+  document.getElementById("units").textContent = unitSum ? unitSum.toFixed(1) : "—";
+
+  // Update overall modes
+  if (gwaValue !== null) {
+    document.getElementById("mode-numeric").textContent = gwaValue.toFixed(2);
+    document.getElementById("mode-gpa").textContent = formatGrade(gwaValue, "gpa");
+    document.getElementById("mode-letter").textContent = formatGrade(gwaValue, "letter");
+  } else {
+    document.getElementById("mode-numeric").textContent =
+    document.getElementById("mode-gpa").textContent =
+    document.getElementById("mode-letter").textContent = "—";
+  }
+}
+
+
+  </script>
+
+</body>
+</html>
