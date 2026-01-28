@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modern QR Scanner</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Global */
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #0d0d0d;
+    color: #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #00ffcc;
+    text-align: center;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 10px #00ffcc33;
+  }
+
+  /* QR Reader */
+  #reader {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 2px solid #00ffcc33;
+    box-shadow: 0 0 20px #00ffcc22;
+    transition: box-shadow 0.3s, transform 0.3s;
+  }
+
+  #reader.scanned {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px #00ffcc88;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.6rem 1.4rem;
+    font-weight: 600;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #00ffc6, #00aaff);
+    color: #0d0d0d;
+    box-shadow: 0 4px 15px rgba(0,255,255,0.3);
+    font-size: 1rem;
+    margin: 0.5rem;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(0,255,255,0.5);
+  }
+
+  .btn:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 10px rgba(0,255,255,0.3);
+  }
+
+  /* File upload & drag area */
+  input[type="file"] {
+    display: block;
+    margin: 1rem auto;
+    color: #fff;
+  }
+
+  #drop-area {
+    width: 100%;
+    max-width: 400px;
+    border: 2px dashed #00ffcc55;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    text-align: center;
+    color: #00ffccaa;
+    margin-top: 1rem;
+    transition: all 0.3s;
+  }
+
+  #drop-area.hover {
+    border-color: #00ffcc;
+    background-color: rgba(0,255,204,0.1);
+    transform: scale(1.02);
+  }
+
+  /* Result box */
+  #result {
+    margin-top: 1.5rem;
+    font-size: 1.2rem;
+    background: #111111;
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 15px rgba(0,255,204,0.2);
+    transition: all 0.3s ease;
+  }
+
+  #result.flash {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(0,255,204,0.5);
+    color: #00ffcc;
+  }
+</style>
+</head>
+<body>
+
+<h1>qr code scanner</h1>
+
+<div id="reader"></div>
+
+<div>
+  <button id="start-camera" class="btn">Start Camera</button>
+  <button id="stop-camera" class="btn">Stop Camera</button>
+</div>
+
+<input type="file" id="qr-file" accept="image/*">
+
+<div id="drop-area">Drag & Drop QR code image here or paste with Ctrl+V</div>
+
+<div id="result">QR code output will appear here.</div>
+
+<script>
+let html5QrcodeScanner;
+let isCameraActive = false;
+const resultDiv = document.getElementById('result');
+const readerDiv = document.getElementById('reader');
+
+function showResult(text) {
+  resultDiv.textContent = `QR Code Content: ${text}`;
+  resultDiv.classList.add('flash');
+  readerDiv.classList.add('scanned');
+  setTimeout(() => {
+    resultDiv.classList.remove('flash');
+    readerDiv.classList.remove('scanned');
+  }, 600);
+}
+
+// Start Camera
+document.getElementById('start-camera').addEventListener('click', () => {
+  if (isCameraActive) return;
+  html5QrcodeScanner = new Html5Qrcode("reader");
+
+  html5QrcodeScanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
+    (decodedText) => {
+      showResult(decodedText);
+    },
+    (errorMessage) => {}
+  ).then(() => { isCameraActive = true; })
+    .catch(err => alert(`Camera failed: ${err}`));
+});
+
+// Stop Camera
+document.getElementById('stop-camera').addEventListener('click', () => {
+  if (html5QrcodeScanner && isCameraActive) {
+    html5QrcodeScanner.stop().then(() => {
+      isCameraActive = false;
+      resultDiv.textContent = "Camera stopped.";
+    }).catch(err => console.error(err));
+  }
+});
+
+// Scan file
+function scanFile(file) {
+  Html5Qrcode.scanFile(file, true)
+    .then(decodedText => showResult(decodedText))
+    .catch(err => {
+      resultDiv.textContent = `Failed to decode QR: ${err}`;
+    });
+}
+
+// File upload
+document.getElementById('qr-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) scanFile(file);
+});
+
+// Drag & Drop
+const dropArea = document.getElementById('drop-area');
+dropArea.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropArea.classList.add('hover');
+});
+dropArea.addEventListener('dragleave', e => {
+  e.preventDefault();
+  dropArea.classList.remove('hover');
+});
+dropArea.addEventListener('drop', e => {
+  e.preventDefault();
+  dropArea.classList.remove('hover');
+  const file = e.dataTransfer.files[0];
+  if (file) scanFile(file);
+});
+
+// Paste image
+document.addEventListener('paste', (e) => {
+  const items = e.clipboardData.items;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf("image") !== -1) {
+      const file = items[i].getAsFile();
+      scanFile(file);
+      break;
+    }
+  }
+});
+</script>
+
+</body>
+</html>
